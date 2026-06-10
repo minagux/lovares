@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d0d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nosso Álbum">
+<link rel="manifest" href="manifest.json">
+<title>Nosso Álbum ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #13132b;
+    --surface2: #1a1a35;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0eeff;
+    --text-muted: #8b8ab0;
+    --common: #9ca3af;
+    --uncommon: #4ade80;
+    --rare: #60a5fa;
+    --epic: #c084fc;
+    --legendary: #fbbf24;
+    --common-glow: rgba(156,163,175,0.3);
+    --uncommon-glow: rgba(74,222,128,0.35);
+    --rare-glow: rgba(96,165,250,0.35);
+    --epic-glow: rgba(192,132,252,0.4);
+    --legendary-glow: rgba(251,191,36,0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Stars bg ── */
+  #stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 45%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 55%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 25%, rgba(255,255,255,0.5) 0%, transparent 100%);
+  }
+
+  /* ── Nav ── */
+  #nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(13,13,26,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-btn {
+    background: none; border: none; color: var(--text-muted);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 6px 16px; cursor: pointer;
+    font-size: 11px; font-family: 'Inter', sans-serif;
+    transition: color 0.2s;
+  }
+  .nav-btn svg { width: 22px; height: 22px; }
+  .nav-btn.active { color: var(--epic); }
+
+  /* ── Screens ── */
+  .screen {
+    display: none; min-height: 100vh;
+    padding: 24px 16px 88px; position: relative; z-index: 1;
+  }
+  .screen.active { display: block; }
+
+  /* ── Header ── */
+  .page-title {
+    font-family: 'Cinzel', serif;
+    font-size: 22px; font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px; color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  /* ── Cards ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .sticker-card {
+    aspect-ratio: 2/3;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    position: relative; overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .sticker-card:hover { transform: translateY(-3px); }
+  .sticker-card img {
+    width: 100%; height: 70%;
+    object-fit: cover; display: block;
+  }
+  .sticker-card .card-body {
+    padding: 8px;
+  }
+  .sticker-card .card-name {
+    font-size: 11px; font-weight: 500;
+    color: var(--text); line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sticker-card .card-date {
+    font-size: 10px; color: var(--text-muted); margin-top: 2px;
+  }
+  .rarity-badge {
+    position: absolute; top: 6px; right: 6px;
+    font-size: 9px; font-weight: 600;
+    padding: 2px 6px; border-radius: 20px;
+    font-family: 'Cinzel', serif; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* raridade por nível */
+  .r-comum    { color: var(--common); border: 1px solid var(--common); background: rgba(156,163,175,0.1); box-shadow: 0 0 8px var(--common-glow); }
+  .r-incomum  { color: var(--uncommon); border: 1px solid var(--uncommon); background: rgba(74,222,128,0.1); box-shadow: 0 0 8px var(--uncommon-glow); }
+  .r-rara     { color: var(--rare); border: 1px solid var(--rare); background: rgba(96,165,250,0.1); box-shadow: 0 0 8px var(--rare-glow); }
+  .r-epica    { color: var(--epic); border: 1px solid var(--epic); background: rgba(192,132,252,0.1); box-shadow: 0 0 8px var(--epic-glow); }
+  .r-lendaria { color: var(--legendary); border: 1px solid var(--legendary); background: rgba(251,191,36,0.1); box-shadow: 0 0 10px var(--legendary-glow); }
+
+  .card-border-comum    { box-shadow: 0 0 0 1px var(--common-glow); }
+  .card-border-incomum  { box-shadow: 0 0 12px var(--uncommon-glow); }
+  .card-border-rara     { box-shadow: 0 0 14px var(--rare-glow); }
+  .card-border-epica    { box-shadow: 0 0 16px var(--epic-glow); border-color: rgba(192,132,252,0.3); }
+  .card-border-lendaria { box-shadow: 0 0 20px var(--legendary-glow); border-color: rgba(251,191,36,0.3); }
+
+  /* ── Form ── */
+  .form-group { margin-bottom: 18px; }
+  label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  input[type=text], textarea, select {
+    width: 100%; padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-size: 14px; font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  input[type=text]:focus, textarea:focus, select:focus {
+    border-color: rgba(192,132,252,0.5);
+  }
+  textarea { resize: none; height: 80px; }
+  select option { background: #1a1a35; }
+
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px; padding: 32px;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .upload-area:hover { border-color: rgba(192,132,252,0.4); background: rgba(192,132,252,0.04); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-text { font-size: 14px; color: var(--text-muted); }
+  .upload-preview {
+    width: 100%; max-height: 200px;
+    object-fit: cover; border-radius: 8px;
+    margin-top: 12px; display: none;
+  }
+
+  .btn-primary {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #7c3aed, #9333ea);
+    border: none; border-radius: 12px;
+    color: #fff; font-size: 15px; font-weight: 600;
+    font-family: 'Cinzel', serif; letter-spacing: 0.5px;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 20px rgba(147,51,234,0.3);
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    width: 100%; padding: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text);
+    font-size: 14px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.06); }
+
+  /* ── Home screen ── */
+  .home-hero {
+    text-align: center; padding: 40px 0 32px;
+  }
+  .home-hero .heart {
+    font-size: 48px; margin-bottom: 16px;
+    display: block; animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .home-title {
+    font-family: 'Cinzel', serif;
+    font-size: 28px; font-weight: 700;
+    background: linear-gradient(135deg, #c084fc, #fbbf24);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .home-sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin: 24px 0;
+  }
+  .stat-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 10px; text-align: center;
+  }
+  .stat-num {
+    font-family: 'Cinzel', serif;
+    font-size: 22px; font-weight: 600;
+    color: var(--epic);
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .action-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;
+  }
+  .action-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 16px;
+    cursor: pointer; text-align: center;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .action-card:hover { transform: translateY(-2px); background: var(--surface2); }
+  .action-card .ac-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .action-card .ac-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .action-card .ac-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── Packs screen ── */
+  .pack-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+    text-align: center; margin-bottom: 24px;
+  }
+  .pack-icon { font-size: 56px; display: block; margin-bottom: 12px; }
+  .pack-count {
+    font-family: 'Cinzel', serif; font-size: 32px;
+    font-weight: 700; color: var(--legendary);
+  }
+  .pack-label { font-size: 13px; color: var(--text-muted); }
+  .pack-btn {
+    margin-top: 16px; display: block; width: 100%;
+    padding: 14px; background: linear-gradient(135deg, #d97706, #f59e0b);
+    border: none; border-radius: 12px;
+    color: #1a1200; font-size: 15px; font-weight: 700;
+    font-family: 'Cinzel', serif; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+    transition: transform 0.15s, opacity 0.2s;
+  }
+  .pack-btn:hover { transform: translateY(-1px); }
+  .pack-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .pack-info {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .pack-info p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .pack-info strong { color: var(--text); }
+
+  /* ── Pack opening overlay ── */
+  #pack-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.92);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #pack-overlay.show { display: flex; }
+
+  .overlay-title {
+    font-family: 'Cinzel', serif; font-size: 18px;
+    color: var(--text); margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .reveal-card {
+    width: 200px; height: 300px;
+    perspective: 600px; margin-bottom: 24px;
+    cursor: pointer;
+  }
+  .reveal-inner {
+    width: 100%; height: 100%;
+    position: relative; transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .reveal-card.flipped .reveal-inner { transform: rotateY(180deg); }
+
+  .reveal-front, .reveal-back {
+    position: absolute; inset: 0; border-radius: 14px;
+    backface-visibility: hidden;
+  }
+  .reveal-front {
+    background: linear-gradient(135deg, #1a1a35 0%, #2d1b69 100%);
+    border: 2px solid rgba(192,132,252,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px;
+    box-shadow: 0 0 30px rgba(192,132,252,0.2);
+  }
+  .reveal-back {
+    transform: rotateY(180deg);
+    overflow: hidden;
+    border: 2px solid var(--border);
+  }
+  .reveal-back img {
+    width: 100%; height: 65%; object-fit: cover; display: block;
+  }
+  .reveal-back .reveal-body {
+    padding: 10px; background: var(--surface);
+    height: 35%;
+  }
+  .reveal-back .reveal-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .reveal-back .reveal-rarity {
+    font-size: 11px; margin-top: 4px;
+    font-family: 'Cinzel', serif; font-weight: 600;
+  }
+
+  .reveal-hint { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .reveal-progress { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+  #overlay-close {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 32px;
+    color: var(--text); font-size: 14px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── Album filter ── */
+  .filter-row {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding-bottom: 8px; margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0; padding: 6px 14px;
+    border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-muted);
+    font-size: 12px; cursor: pointer; white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .filter-chip.active { border-color: rgba(192,132,252,0.5); color: var(--epic); background: rgba(192,132,252,0.1); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--text-muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+  .empty-text { font-size: 14px; line-height: 1.7; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: rgba(30,30,60,0.95); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 20px; font-size: 13px; color: var(--text);
+    z-index: 300; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+
+  /* ── Card detail overlay ── */
+  #card-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.88);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #card-overlay.show { display: flex; }
+  .card-detail {
+    width: 100%; max-width: 320px;
+    background: var(--surface); border-radius: 16px;
+    overflow: hidden; border: 1px solid var(--border);
+  }
+  .card-detail img {
+    width: 100%; height: 240px; object-fit: cover; display: block;
+  }
+  .card-detail-body { padding: 16px; }
+  .card-detail-name { font-family: 'Cinzel', serif; font-size: 17px; margin-bottom: 4px; }
+  .card-detail-date { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .card-detail-note { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
+  .card-detail-close {
+    width: 100%; padding: 12px;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<!-- ══════════════ HOME ══════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-hero">
+    <span class="heart">💖</span>
+    <div class="home-title">Nosso Álbum</div>
+    <p class="home-sub">Cada memória é uma figurinha.<br>Cada figurinha conta a nossa história.</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">figurinhas</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="stat-packs" style="color: var(--legendary)">0</div>
+      <div class="stat-label">pacotes</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="stat-legendary" style="color: var(--legendary)">0</div>
+      <div class="stat-label">lendárias</div>
+    </div>
+  </div>
+
+  <div class="action-grid">
+    <div class="action-card" onclick="goTo('add')">
+      <span class="ac-icon">📸</span>
+      <div class="ac-title">Adicionar memória</div>
+      <div class="ac-desc">Criar nova figurinha</div>
+    </div>
+    <div class="action-card" onclick="goTo('packs')">
+      <span class="ac-icon">✨</span>
+      <div class="ac-title">Abrir pacote</div>
+      <div class="ac-desc">Revelar figurinhas</div>
+    </div>
+    <div class="action-card" onclick="goTo('album')">
+      <span class="ac-icon">📖</span>
+      <div class="ac-title">Ver álbum</div>
+      <div class="ac-desc">Coleção completa</div>
+    </div>
+    <div class="action-card" id="home-pending-card" style="display:none" onclick="goTo('packs')">
+      <span class="ac-icon">🎁</span>
+      <div class="ac-title">Pacotes prontos!</div>
+      <div class="ac-desc" id="home-pending-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADICIONAR ══════════════ -->
+<div id="screen-add" class="screen">
+  <div class="page-title">Nova memória</div>
+  <p class="page-sub">Adicione uma foto e ela vira uma figurinha no álbum</p>
+
+  <div class="form-group">
+    <label>Foto da memória</label>
+    <div class="upload-area" id="upload-area">
+      <input type="file" accept="image/*" id="photo-input" onchange="previewPhoto(event)">
+      <div class="upload-icon">🌟</div>
+      <div class="upload-text">Toque para escolher uma foto</div>
+      <img id="photo-preview" class="upload-preview" alt="preview">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Nome da memória</label>
+    <input type="text" id="memory-name" placeholder="Ex: Jantar no La Maison, Viagem a Gramado...">
+  </div>
+
+  <div class="form-group">
+    <label>Data</label>
+    <input type="text" id="memory-date" placeholder="Ex: Dezembro 2024">
+  </div>
+
+  <div class="form-group">
+    <label>Raridade</label>
+    <select id="memory-rarity">
+      <option value="comum">⚪ Comum — um momento do dia a dia</option>
+      <option value="incomum">🟢 Incomum — algo especial</option>
+      <option value="rara">🔵 Rara — uma surpresa gostosa</option>
+      <option value="epica" selected>🟣 Épica — uma aventura juntos</option>
+      <option value="lendaria">🟡 Lendária — inesquecível para sempre</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Nota especial (opcional)</label>
+    <textarea id="memory-note" placeholder="O que foi especial nesse momento?"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Quem adicionou?</label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div id="who-eu" class="action-card" onclick="selectWho('eu')" style="padding: 14px; text-align: center;">
+        <div class="ac-icon">🧡</div>
+        <div class="ac-title">Eu</div>
+      </div>
+      <div id="who-amor" class="action-card" onclick="selectWho('amor')" style="padding: 14px; text-align: center;">
+        <div class="ac-icon">💜</div>
+        <div class="ac-title">Meu amor</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="saveMemory()">✨ Salvar figurinha</button>
+  <div style="height: 12px;"></div>
+  <button class="btn-secondary" onclick="goTo('home')">Cancelar</button>
+</div>
+
+<!-- ══════════════ PACOTES ══════════════ -->
+<div id="screen-packs" class="screen">
+  <div class="page-title">Pacotes</div>
+  <p class="page-sub">Cada 3 memórias novas geram um pacote com 5 figurinhas</p>
+
+  <div class="pack-hero">
+    <span class="pack-icon">🎁</span>
+    <div class="pack-count" id="packs-available">0</div>
+    <div class="pack-label">pacotes disponíveis</div>
+    <button class="pack-btn" id="open-pack-btn" onclick="openPack()" disabled>
+      Abrir pacote ✨
+    </button>
+  </div>
+
+  <div class="pack-info">
+    <p>
+      <strong>Como funciona?</strong><br>
+      A cada <strong>3 memórias</strong> adicionadas (por qualquer um de vocês), um pacote novo fica disponível.<br><br>
+      Cada pacote contém <strong>5 figurinhas aleatórias</strong> da coleção.<br>
+      Figurinhas mais raras têm menos chance de aparecer ✨
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════ ÁLBUM ══════════════ -->
+<div id="screen-album" class="screen">
+  <div class="page-title">Álbum</div>
+  <p class="page-sub">Todas as figurinhas que já encontraram</p>
+
+  <div class="filter-row">
+    <div class="filter-chip active" onclick="filterAlbum('todas', this)">Todas</div>
+    <div class="filter-chip" onclick="filterAlbum('comum', this)">⚪ Comum</div>
+    <div class="filter-chip" onclick="filterAlbum('incomum', this)">🟢 Incomum</div>
+    <div class="filter-chip" onclick="filterAlbum('rara', this)">🔵 Rara</div>
+    <div class="filter-chip" onclick="filterAlbum('epica', this)">🟣 Épica</div>
+    <div class="filter-chip" onclick="filterAlbum('lendaria', this)">🟡 Lendária</div>
+  </div>
+
+  <div class="card-grid" id="album-grid"></div>
+  <div id="album-empty" class="empty-state" style="display:none">
+    <span class="empty-icon">📭</span>
+    <p class="empty-text">Ainda não há figurinhas aqui.<br>Adicione memórias e abra pacotes!</p>
+  </div>
+</div>
+
+<!-- ── Nav ── -->
+<nav id="nav">
+  <button class="nav-btn active" onclick="goTo('home')" id="nav-home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Início
+  </button>
+  <button class="nav-btn" onclick="goTo('add')" id="nav-add">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Adicionar
+  </button>
+  <button class="nav-btn" onclick="goTo('packs')" id="nav-packs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+    Pacotes
+  </button>
+  <button class="nav-btn" onclick="goTo('album')" id="nav-album">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+    Álbum
+  </button>
+</nav>
+
+<!-- ── Pack opening overlay ── -->
+<div id="pack-overlay">
+  <div class="overlay-title" id="overlay-title">Abrindo pacote...</div>
+  <div class="reveal-card" id="reveal-card" onclick="flipCard()">
+    <div class="reveal-inner">
+      <div class="reveal-front">✨</div>
+      <div class="reveal-back" id="reveal-back">
+        <img id="reveal-img" src="" alt="">
+        <div class="reveal-body">
+          <div class="reveal-name" id="reveal-name"></div>
+          <div class="reveal-rarity" id="reveal-rarity"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="reveal-hint" id="reveal-hint">Toque na carta para revelar</p>
+  <p class="reveal-progress" id="reveal-progress">1 / 5</p>
+  <button id="overlay-close" onclick="closePackOverlay()" style="display:none">Ver álbum 📖</button>
+</div>
+
+<!-- ── Card detail overlay ── -->
+<div id="card-overlay">
+  <div class="card-detail">
+    <img id="cd-img" src="" alt="">
+    <div class="card-detail-body">
+      <div id="cd-rarity" class="rarity-badge" style="position:static; display:inline-block; margin-bottom:8px"></div>
+      <div class="card-detail-name" id="cd-name"></div>
+      <div class="card-detail-date" id="cd-date"></div>
+      <div class="card-detail-note" id="cd-note"></div>
+      <button class="card-detail-close" onclick="closeCardOverlay()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let state = {
+  memories: [],        // todas as fotos adicionadas
+  collected: [],       // figurinhas já obtidas em pacotes
+  packsAvailable: 0,
+  memoriesUntilPack: 3,
+  photoData: null,
+  selectedWho: 'eu'
+};
+
+const RARITY_ORDER = ['comum','incomum','rara','epica','lendaria'];
+const RARITY_LABEL = { comum:'Comum', incomum:'Incomum', rara:'Rara', epica:'Épica', lendaria:'Lendária' };
+const RARITY_WEIGHTS = { comum:40, incomum:28, rara:18, epica:10, lendaria:4 };
+
+// Load from localStorage
+function loadState() {
+  const saved = localStorage.getItem('album-amor-v2');
+  if (saved) {
+    try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+  }
+}
+
+function saveState() {
+  localStorage.setItem('album-amor-v2', JSON.stringify(state));
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  const nb = document.getElementById('nav-' + id);
+  if (nb) nb.classList.add('active');
+
+  if (id === 'home') updateHome();
+  if (id === 'packs') updatePacks();
+  if (id === 'album') renderAlbum('todas');
+}
+
+// ═══════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════
+function updateHome() {
+  document.getElementById('stat-total').textContent = state.memories.length;
+  document.getElementById('stat-packs').textContent = state.packsAvailable;
+  const legendCount = state.collected.filter(c => c.rarity === 'lendaria').length;
+  document.getElementById('stat-legendary').textContent = legendCount;
+
+  const pending = document.getElementById('home-pending-card');
+  const pendingText = document.getElementById('home-pending-text');
+  if (state.packsAvailable > 0) {
+    pending.style.display = '';
+    pendingText.textContent = state.packsAvailable + ' para abrir';
+  } else {
+    pending.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════
+// ADD MEMORY
+// ═══════════════════════════════════════
+function previewPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.photoData = e.target.result;
+    const preview = document.getElementById('photo-preview');
+    preview.src = state.photoData;
+    preview.style.display = 'block';
+    document.querySelector('#upload-area .upload-icon').style.display = 'none';
+    document.querySelector('#upload-area .upload-text').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function selectWho(who) {
+  state.selectedWho = who;
+  ['eu','amor'].forEach(w => {
+    const el = document.getElementById('who-' + w);
+    if (w === who) {
+      el.style.borderColor = 'rgba(192,132,252,0.5)';
+      el.style.background = 'rgba(192,132,252,0.08)';
+    } else {
+      el.style.borderColor = '';
+      el.style.background = '';
+    }
+  });
+}
+
+function saveMemory() {
+  const name = document.getElementById('memory-name').value.trim();
+  const date = document.getElementById('memory-date').value.trim();
+  const rarity = document.getElementById('memory-rarity').value;
+  const note = document.getElementById('memory-note').value.trim();
+
+  if (!name) { showToast('Dá um nome para essa memória 💫'); return; }
+  if (!state.photoData) { showToast('Escolha uma foto primeiro 📸'); return; }
+
+  const memory = {
+    id: Date.now(),
+    name, date, rarity, note,
+    who: state.selectedWho,
+    photo: state.photoData,
+    addedAt: new Date().toISOString()
+  };
+
+  state.memories.push(memory);
+
+  // Check if earned a pack
+  const totalAdded = state.memories.length;
+  const packsEarned = Math.floor(totalAdded / 3);
+  const previousPacks = Math.floor((totalAdded - 1) / 3);
+  if (packsEarned > previousPacks) {
+    state.packsAvailable++;
+    showToast('🎁 Pacote desbloqueado!');
+  } else {
+    const remaining = 3 - (totalAdded % 3);
+    showToast(`✨ Figurinha salva! Faltam ${remaining} memórias para um pacote`);
+  }
+
+  // Reset form
+  state.photoData = null;
+  document.getElementById('memory-name').value = '';
+  document.getElementById('memory-date').value = '';
+  document.getElementById('memory-note').value = '';
+  document.getElementById('memory-rarity').value = 'epica';
+  document.getElementById('photo-preview').style.display = 'none';
+  document.querySelector('#upload-area .upload-icon').style.display = '';
+  document.querySelector('#upload-area .upload-text').style.display = '';
+  document.getElementById('photo-input').value = '';
+  selectWho('eu');
+
+  saveState();
+  goTo('home');
+}
+
+// ═══════════════════════════════════════
+// PACKS
+// ═══════════════════════════════════════
+function updatePacks() {
+  document.getElementById('packs-available').textContent = state.packsAvailable;
+  const btn = document.getElementById('open-pack-btn');
+  btn.disabled = state.packsAvailable === 0 || state.memories.length === 0;
+}
+
+// Pack opening state
+let packCards = [];
+let currentCardIndex = 0;
+let isFlipped = false;
+
+function openPack() {
+  if (state.packsAvailable === 0 || state.memories.length === 0) return;
+  state.packsAvailable--;
+
+  // Pick 5 random cards weighted by rarity
+  packCards = [];
+  const pool = [...state.memories];
+
+  // If pool < 5, allow repeats
+  for (let i = 0; i < 5; i++) {
+    const picked = pickWeightedCard(pool);
+    packCards.push(picked);
+    // Add to collected
+    state.collected.push({ ...picked, collectedAt: new Date().toISOString() });
+  }
+
+  saveState();
+
+  currentCardIndex = 0;
+  isFlipped = false;
+  showPackCard(0);
+  document.getElementById('pack-overlay').classList.add('show');
+  document.getElementById('overlay-close').style.display = 'none';
+  updatePacks();
+}
+
+function pickWeightedCard(pool) {
+  // Build weighted pool
+  const weighted = [];
+  pool.forEach(m => {
+    const w = RARITY_WEIGHTS[m.rarity] || 10;
+    for (let i = 0; i < w; i++) weighted.push(m);
+  });
+  return weighted[Math.floor(Math.random() * weighted.length)];
+}
+
+function showPackCard(index) {
+  const card = packCards[index];
+  isFlipped = false;
+  const inner = document.querySelector('.reveal-inner');
+  inner.style.transition = 'none';
+  inner.style.transform = 'rotateY(0deg)';
+  document.getElementById('reveal-card').classList.remove('flipped');
+
+  // Set back content
+  document.getElementById('reveal-img').src = card.photo;
+  document.getElementById('reveal-name').textContent = card.name;
+  const rl = document.getElementById('reveal-rarity');
+  rl.textContent = RARITY_LABEL[card.rarity];
+  rl.className = 'reveal-rarity';
+  const colorMap = { comum:'#9ca3af', incomum:'#4ade80', rara:'#60a5fa', epica:'#c084fc', lendaria:'#fbbf24' };
+  rl.style.color = colorMap[card.rarity] || '#fff';
+
+  document.getElementById('reveal-progress').textContent = (index + 1) + ' / 5';
+  document.getElementById('reveal-hint').style.display = '';
+  document.getElementById('overlay-title').textContent = 'Carta ' + (index + 1) + ' de 5';
+
+  setTimeout(() => { inner.style.transition = ''; }, 50);
+}
+
+function flipCard() {
+  if (isFlipped) {
+    // Advance to next
+    if (currentCardIndex < packCards.length - 1) {
+      currentCardIndex++;
+      showPackCard(currentCardIndex);
+    } else {
+      // Done
+      document.getElementById('reveal-hint').style.display = 'none';
+      document.getElementById('overlay-title').textContent = 'Pacote aberto! 🎉';
+      document.getElementById('overlay-close').style.display = 'block';
+    }
+    return;
+  }
+  isFlipped = true;
+  document.getElementById('reveal-card').classList.add('flipped');
+  document.getElementById('reveal-hint').textContent = 'Toque novamente para a próxima';
+
+  // Legendary sparkle effect
+  const card = packCards[currentCardIndex];
+  if (card.rarity === 'lendaria') {
+    document.getElementById('overlay-title').textContent = '🌟 LENDÁRIA! 🌟';
+  } else if (card.rarity === 'epica') {
+    document.getElementById('overlay-title').textContent = '✨ Épica!';
+  } else {
+    document.getElementById('overlay-title').textContent = RARITY_LABEL[card.rarity];
+  }
+}
+
+function closePackOverlay() {
+  document.getElementById('pack-overlay').classList.remove('show');
+  goTo('album');
+}
+
+// ═══════════════════════════════════════
+// ALBUM
+// ═══════════════════════════════════════
+let currentFilter = 'todas';
+
+function filterAlbum(rarity, el) {
+  currentFilter = rarity;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderAlbum(rarity);
+}
+
+function renderAlbum(filter) {
+  const grid = document.getElementById('album-grid');
+  const empty = document.getElementById('album-empty');
+  grid.innerHTML = '';
+
+  let cards = [...state.collected];
+  // Sort: lendaria first
+  cards.sort((a, b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity));
+
+  if (filter !== 'todas') {
+    cards = cards.filter(c => c.rarity === filter);
+  }
+
+  if (cards.length === 0) {
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  cards.forEach(card => {
+    const div = document.createElement('div');
+    div.className = `sticker-card card-border-${card.rarity}`;
+    div.onclick = () => openCardDetail(card);
+    div.innerHTML = `
+      <img src="${card.photo}" alt="${card.name}" loading="lazy">
+      <span class="rarity-badge r-${card.rarity}">${RARITY_LABEL[card.rarity]}</span>
+      <div class="card-body">
+        <div class="card-name">${card.name}</div>
+        <div class="card-date">${card.date || ''}</div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function openCardDetail(card) {
+  const colorMap = { comum:'#9ca3af', incomum:'#4ade80', rara:'#60a5fa', epica:'#c084fc', lendaria:'#fbbf24' };
+  document.getElementById('cd-img').src = card.photo;
+  document.getElementById('cd-name').textContent = card.name;
+  document.getElementById('cd-date').textContent = card.date || '';
+  document.getElementById('cd-note').textContent = card.note || '';
+  const badge = document.getElementById('cd-rarity');
+  badge.textContent = RARITY_LABEL[card.rarity];
+  badge.className = `rarity-badge r-${card.rarity}`;
+  badge.style.position = 'static';
+  badge.style.display = 'inline-block';
+  badge.style.marginBottom = '8px';
+  document.getElementById('card-overlay').classList.add('show');
+}
+
+function closeCardOverlay() {
+  document.getElementById('card-overlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+loadState();
+selectWho('eu');
+updateHome();
+
+// Service Worker registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
