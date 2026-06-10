@@ -8,37 +8,20 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nosso Álbum">
 <link rel="manifest" href="manifest.json">
-<title>Lovares Album Collection ✨</title>
+<title>Nosso Álbum ✨</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0d1a;
-    --surface: #13132b;
-    --surface2: #1a1a35;
-    --border: rgba(255,255,255,0.08);
-    --text: #f0eeff;
-    --text-muted: #8b8ab0;
-    --common: #9ca3af;
-    --uncommon: #4ade80;
-    --rare: #60a5fa;
-    --epic: #c084fc;
-    --legendary: #fbbf24;
-    --common-glow: rgba(156,163,175,0.3);
-    --uncommon-glow: rgba(74,222,128,0.35);
-    --rare-glow: rgba(96,165,250,0.35);
-    --epic-glow: rgba(192,132,252,0.4);
+    --bg: #0d0d1a; --surface: #13132b; --surface2: #1a1a35;
+    --border: rgba(255,255,255,0.08); --text: #f0eeff; --text-muted: #8b8ab0;
+    --common: #9ca3af; --uncommon: #4ade80; --rare: #60a5fa;
+    --epic: #c084fc; --legendary: #fbbf24;
+    --common-glow: rgba(156,163,175,0.3); --uncommon-glow: rgba(74,222,128,0.35);
+    --rare-glow: rgba(96,165,250,0.35); --epic-glow: rgba(192,132,252,0.4);
     --legendary-glow: rgba(251,191,36,0.45);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── Stars bg ── */
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
   #stars {
     position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background:
@@ -54,92 +37,109 @@
       radial-gradient(1px 1px at 55% 25%, rgba(255,255,255,0.5) 0%, transparent 100%);
   }
 
+  /* ── Setup screen ── */
+  #screen-setup {
+    position: fixed; inset: 0; z-index: 500;
+    background: var(--bg); display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .setup-box { width: 100%; max-width: 360px; text-align: center; }
+  .setup-title { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700;
+    background: linear-gradient(135deg, #c084fc, #fbbf24);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  .setup-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; }
+  .who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+  .who-card {
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 16px; padding: 24px 16px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .who-card:hover { border-color: rgba(192,132,252,0.4); background: var(--surface2); }
+  .who-card.selected { border-color: rgba(192,132,252,0.7); background: rgba(192,132,252,0.08); }
+  .who-card .wc-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+  .who-card .wc-name { font-size: 15px; font-weight: 500; color: var(--text); }
+  .setup-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+  /* ── Loading overlay ── */
+  #loading {
+    position: fixed; inset: 0; z-index: 400; background: rgba(13,13,26,0.85);
+    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+  }
+  #loading.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid var(--border);
+    border-top-color: var(--epic); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { font-size: 14px; color: var(--text-muted); }
+
+  /* ── Firebase config warning ── */
+  #config-warning {
+    position: fixed; inset: 0; z-index: 600; background: var(--bg);
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  #config-warning.show { display: flex; }
+  .warning-box { max-width: 400px; text-align: center; }
+  .warning-box h2 { font-family: 'Cinzel', serif; font-size: 20px; margin-bottom: 12px; color: var(--legendary); }
+  .warning-box p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px; }
+  .warning-box code {
+    display: block; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; font-size: 12px; color: var(--epic);
+    text-align: left; white-space: pre-wrap; word-break: break-all; margin-bottom: 16px;
+    font-family: monospace;
+  }
+
   /* ── Nav ── */
   #nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(13,13,26,0.95);
-    backdrop-filter: blur(12px);
+    background: rgba(13,13,26,0.95); backdrop-filter: blur(12px);
     border-top: 1px solid var(--border);
     display: flex; justify-content: space-around;
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-    z-index: 100;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100;
   }
   .nav-btn {
     background: none; border: none; color: var(--text-muted);
     display: flex; flex-direction: column; align-items: center;
-    gap: 3px; padding: 6px 16px; cursor: pointer;
-    font-size: 11px; font-family: 'Inter', sans-serif;
-    transition: color 0.2s;
+    gap: 3px; padding: 6px 12px; cursor: pointer;
+    font-size: 11px; font-family: 'Inter', sans-serif; transition: color 0.2s;
   }
   .nav-btn svg { width: 22px; height: 22px; }
   .nav-btn.active { color: var(--epic); }
 
   /* ── Screens ── */
-  .screen {
-    display: none; min-height: 100vh;
-    padding: 24px 16px 88px; position: relative; z-index: 1;
-  }
+  .screen { display: none; min-height: 100vh; padding: 24px 16px 88px; position: relative; z-index: 1; }
   .screen.active { display: block; }
+  .page-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
 
-  /* ── Header ── */
-  .page-title {
-    font-family: 'Cinzel', serif;
-    font-size: 22px; font-weight: 600;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-  .page-sub {
-    font-size: 13px; color: var(--text-muted);
-    margin-bottom: 24px;
-  }
-
-  /* ── Cards ── */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-  }
-
+  /* ── Card grid ── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
   .sticker-card {
-    aspect-ratio: 2/3;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    position: relative; overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    aspect-ratio: 2/3; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface); position: relative; overflow: hidden;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
   }
   .sticker-card:hover { transform: translateY(-3px); }
-  .sticker-card img {
-    width: 100%; height: 70%;
-    object-fit: cover; display: block;
-  }
-  .sticker-card .card-body {
-    padding: 8px;
-  }
-  .sticker-card .card-name {
-    font-size: 11px; font-weight: 500;
-    color: var(--text); line-height: 1.3;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .sticker-card .card-date {
-    font-size: 10px; color: var(--text-muted); margin-top: 2px;
-  }
+  .sticker-card img { width: 100%; height: 70%; object-fit: cover; display: block; background: var(--surface2); }
+  .sticker-card .card-body { padding: 8px; }
+  .sticker-card .card-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sticker-card .card-date { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
   .rarity-badge {
     position: absolute; top: 6px; right: 6px;
-    font-size: 9px; font-weight: 600;
-    padding: 2px 6px; border-radius: 20px;
-    font-family: 'Cinzel', serif; letter-spacing: 0.5px;
-    text-transform: uppercase;
+    font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 20px;
+    font-family: 'Cinzel', serif; letter-spacing: 0.5px; text-transform: uppercase;
   }
-
-  /* raridade por nível */
-  .r-comum    { color: var(--common); border: 1px solid var(--common); background: rgba(156,163,175,0.1); box-shadow: 0 0 8px var(--common-glow); }
-  .r-incomum  { color: var(--uncommon); border: 1px solid var(--uncommon); background: rgba(74,222,128,0.1); box-shadow: 0 0 8px var(--uncommon-glow); }
-  .r-rara     { color: var(--rare); border: 1px solid var(--rare); background: rgba(96,165,250,0.1); box-shadow: 0 0 8px var(--rare-glow); }
-  .r-epica    { color: var(--epic); border: 1px solid var(--epic); background: rgba(192,132,252,0.1); box-shadow: 0 0 8px var(--epic-glow); }
-  .r-lendaria { color: var(--legendary); border: 1px solid var(--legendary); background: rgba(251,191,36,0.1); box-shadow: 0 0 10px var(--legendary-glow); }
-
+  .who-tag {
+    position: absolute; top: 6px; left: 6px;
+    font-size: 9px; padding: 2px 5px; border-radius: 20px;
+    background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.7);
+  }
+  .r-comum    { color: var(--common);    border: 1px solid var(--common);    background: rgba(156,163,175,0.1); box-shadow: 0 0 8px var(--common-glow); }
+  .r-incomum  { color: var(--uncommon);  border: 1px solid var(--uncommon);  background: rgba(74,222,128,0.1);  box-shadow: 0 0 8px var(--uncommon-glow); }
+  .r-rara     { color: var(--rare);      border: 1px solid var(--rare);      background: rgba(96,165,250,0.1);  box-shadow: 0 0 8px var(--rare-glow); }
+  .r-epica    { color: var(--epic);      border: 1px solid var(--epic);      background: rgba(192,132,252,0.1); box-shadow: 0 0 8px var(--epic-glow); }
+  .r-lendaria { color: var(--legendary); border: 1px solid var(--legendary); background: rgba(251,191,36,0.1);  box-shadow: 0 0 10px var(--legendary-glow); }
   .card-border-comum    { box-shadow: 0 0 0 1px var(--common-glow); }
   .card-border-incomum  { box-shadow: 0 0 12px var(--uncommon-glow); }
   .card-border-rara     { box-shadow: 0 0 14px var(--rare-glow); }
@@ -150,100 +150,64 @@
   .form-group { margin-bottom: 18px; }
   label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
   input[type=text], textarea, select {
-    width: 100%; padding: 12px 14px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text);
-    font-size: 14px; font-family: 'Inter', sans-serif;
+    width: 100%; padding: 12px 14px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif;
     outline: none; transition: border-color 0.2s;
   }
-  input[type=text]:focus, textarea:focus, select:focus {
-    border-color: rgba(192,132,252,0.5);
-  }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: rgba(192,132,252,0.5); }
   textarea { resize: none; height: 80px; }
   select option { background: #1a1a35; }
-
   .upload-area {
-    border: 2px dashed var(--border);
-    border-radius: 12px; padding: 32px;
-    text-align: center; cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    border: 2px dashed var(--border); border-radius: 12px; padding: 32px;
+    text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
     position: relative; overflow: hidden;
   }
   .upload-area:hover { border-color: rgba(192,132,252,0.4); background: rgba(192,132,252,0.04); }
   .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .upload-icon { font-size: 32px; margin-bottom: 8px; }
   .upload-text { font-size: 14px; color: var(--text-muted); }
-  .upload-preview {
-    width: 100%; max-height: 200px;
-    object-fit: cover; border-radius: 8px;
-    margin-top: 12px; display: none;
-  }
+  .upload-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-top: 12px; display: none; }
 
   .btn-primary {
-    width: 100%; padding: 14px;
-    background: linear-gradient(135deg, #7c3aed, #9333ea);
-    border: none; border-radius: 12px;
-    color: #fff; font-size: 15px; font-weight: 600;
-    font-family: 'Cinzel', serif; letter-spacing: 0.5px;
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #7c3aed, #9333ea);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 15px; font-weight: 600; font-family: 'Cinzel', serif; letter-spacing: 0.5px;
     cursor: pointer; transition: opacity 0.2s, transform 0.15s;
     box-shadow: 0 4px 20px rgba(147,51,234,0.3);
   }
   .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-primary:active { transform: translateY(0); }
-
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .btn-secondary {
-    width: 100%; padding: 12px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 12px; color: var(--text);
-    font-size: 14px; cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: background 0.2s;
+    width: 100%; padding: 12px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 12px;
+    color: var(--text); font-size: 14px; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: background 0.2s;
   }
   .btn-secondary:hover { background: rgba(255,255,255,0.06); }
 
-  /* ── Home screen ── */
-  .home-hero {
-    text-align: center; padding: 40px 0 32px;
-  }
-  .home-hero .heart {
-    font-size: 48px; margin-bottom: 16px;
-    display: block; animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
-  }
-  .home-title {
-    font-family: 'Cinzel', serif;
-    font-size: 28px; font-weight: 700;
+  /* ── Home ── */
+  .home-hero { text-align: center; padding: 40px 0 28px; }
+  .home-hero .heart { font-size: 48px; margin-bottom: 12px; display: block; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  .home-title { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700;
     background: linear-gradient(135deg, #c084fc, #fbbf24);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+  .home-sub { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .user-pill {
+    display: inline-block; margin-top: 10px;
+    background: rgba(192,132,252,0.12); border: 1px solid rgba(192,132,252,0.3);
+    border-radius: 20px; padding: 4px 14px; font-size: 12px; color: var(--epic);
+    cursor: pointer;
   }
-  .home-sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
-
-  .stats-row {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 10px; margin: 24px 0;
-  }
-  .stat-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 10px; text-align: center;
-  }
-  .stat-num {
-    font-family: 'Cinzel', serif;
-    font-size: 22px; font-weight: 600;
-    color: var(--epic);
-  }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; }
+  .stat-num { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 600; color: var(--epic); }
   .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-  .action-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;
-  }
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
   .action-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px 16px;
-    cursor: pointer; text-align: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 16px; cursor: pointer; text-align: center;
     transition: transform 0.2s, background 0.2s;
   }
   .action-card:hover { transform: translateY(-2px); background: var(--surface2); }
@@ -251,133 +215,64 @@
   .action-card .ac-title { font-size: 13px; font-weight: 500; color: var(--text); }
   .action-card .ac-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-  /* ── Packs screen ── */
-  .pack-hero {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px;
-    text-align: center; margin-bottom: 24px;
-  }
+  /* ── Packs ── */
+  .pack-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px; }
   .pack-icon { font-size: 56px; display: block; margin-bottom: 12px; }
-  .pack-count {
-    font-family: 'Cinzel', serif; font-size: 32px;
-    font-weight: 700; color: var(--legendary);
-  }
+  .pack-count { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; color: var(--legendary); }
   .pack-label { font-size: 13px; color: var(--text-muted); }
   .pack-btn {
-    margin-top: 16px; display: block; width: 100%;
-    padding: 14px; background: linear-gradient(135deg, #d97706, #f59e0b);
-    border: none; border-radius: 12px;
-    color: #1a1200; font-size: 15px; font-weight: 700;
-    font-family: 'Cinzel', serif; cursor: pointer;
-    box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+    margin-top: 16px; display: block; width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    border: none; border-radius: 12px; color: #1a1200;
+    font-size: 15px; font-weight: 700; font-family: 'Cinzel', serif;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(245,158,11,0.3);
     transition: transform 0.15s, opacity 0.2s;
   }
   .pack-btn:hover { transform: translateY(-1px); }
-  .pack-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .pack-info {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px;
-  }
+  .pack-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .pack-info { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
   .pack-info p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
   .pack-info strong { color: var(--text); }
 
-  /* ── Pack opening overlay ── */
+  /* ── Pack overlay ── */
   #pack-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.92);
-    display: none; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 20px;
+    position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.92);
+    display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
   }
   #pack-overlay.show { display: flex; }
-
-  .overlay-title {
-    font-family: 'Cinzel', serif; font-size: 18px;
-    color: var(--text); margin-bottom: 24px;
-    text-align: center;
-  }
-
-  .reveal-card {
-    width: 200px; height: 300px;
-    perspective: 600px; margin-bottom: 24px;
-    cursor: pointer;
-  }
-  .reveal-inner {
-    width: 100%; height: 100%;
-    position: relative; transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
-  }
+  .overlay-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--text); margin-bottom: 24px; text-align: center; }
+  .reveal-card { width: 200px; height: 300px; perspective: 600px; margin-bottom: 24px; cursor: pointer; }
+  .reveal-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); }
   .reveal-card.flipped .reveal-inner { transform: rotateY(180deg); }
-
-  .reveal-front, .reveal-back {
-    position: absolute; inset: 0; border-radius: 14px;
-    backface-visibility: hidden;
-  }
+  .reveal-front, .reveal-back { position: absolute; inset: 0; border-radius: 14px; backface-visibility: hidden; }
   .reveal-front {
     background: linear-gradient(135deg, #1a1a35 0%, #2d1b69 100%);
     border: 2px solid rgba(192,132,252,0.3);
     display: flex; align-items: center; justify-content: center;
-    font-size: 56px;
-    box-shadow: 0 0 30px rgba(192,132,252,0.2);
+    font-size: 56px; box-shadow: 0 0 30px rgba(192,132,252,0.2);
   }
-  .reveal-back {
-    transform: rotateY(180deg);
-    overflow: hidden;
-    border: 2px solid var(--border);
-  }
-  .reveal-back img {
-    width: 100%; height: 65%; object-fit: cover; display: block;
-  }
-  .reveal-back .reveal-body {
-    padding: 10px; background: var(--surface);
-    height: 35%;
-  }
-  .reveal-back .reveal-name {
-    font-size: 13px; font-weight: 500; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .reveal-back .reveal-rarity {
-    font-size: 11px; margin-top: 4px;
-    font-family: 'Cinzel', serif; font-weight: 600;
-  }
-
+  .reveal-back { transform: rotateY(180deg); overflow: hidden; border: 2px solid var(--border); }
+  .reveal-back img { width: 100%; height: 65%; object-fit: cover; display: block; background: var(--surface2); }
+  .reveal-back .reveal-body { padding: 10px; background: var(--surface); height: 35%; }
+  .reveal-back .reveal-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .reveal-back .reveal-rarity { font-size: 11px; margin-top: 4px; font-family: 'Cinzel', serif; font-weight: 600; }
   .reveal-hint { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
   .reveal-progress { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  #overlay-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 32px; color: var(--text); font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
 
-  #overlay-close {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px 32px;
-    color: var(--text); font-size: 14px; cursor: pointer;
-    font-family: 'Inter', sans-serif;
-  }
-
-  /* ── Album filter ── */
-  .filter-row {
-    display: flex; gap: 8px; overflow-x: auto;
-    padding-bottom: 8px; margin-bottom: 16px;
-    scrollbar-width: none;
-  }
+  /* ── Album tabs ── */
+  .tab-row { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .tab-btn { flex: 1; padding: 10px; background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: var(--epic); border-bottom-color: var(--epic); }
+  .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; scrollbar-width: none; }
   .filter-row::-webkit-scrollbar { display: none; }
-  .filter-chip {
-    flex-shrink: 0; padding: 6px 14px;
-    border-radius: 20px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text-muted);
-    font-size: 12px; cursor: pointer; white-space: nowrap;
-    transition: all 0.2s;
-  }
+  .filter-chip { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
   .filter-chip.active { border-color: rgba(192,132,252,0.5); color: var(--epic); background: rgba(192,132,252,0.1); }
 
-  /* ── Empty state ── */
-  .empty-state {
-    text-align: center; padding: 48px 24px;
-    color: var(--text-muted);
-  }
+  /* ── Empty / toast / detail ── */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
   .empty-icon { font-size: 48px; margin-bottom: 12px; display: block; }
   .empty-text { font-size: 14px; line-height: 1.7; }
-
-  /* ── Toast ── */
   #toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
     background: rgba(30,30,60,0.95); backdrop-filter: blur(8px);
@@ -387,66 +282,99 @@
     pointer-events: none; white-space: nowrap;
   }
   #toast.show { opacity: 1; }
-
-  /* ── Card detail overlay ── */
   #card-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.88);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px;
+    position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.88);
+    display: none; align-items: center; justify-content: center; padding: 20px;
   }
   #card-overlay.show { display: flex; }
-  .card-detail {
-    width: 100%; max-width: 320px;
-    background: var(--surface); border-radius: 16px;
-    overflow: hidden; border: 1px solid var(--border);
-  }
-  .card-detail img {
-    width: 100%; height: 240px; object-fit: cover; display: block;
-  }
+  .card-detail { width: 100%; max-width: 320px; background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+  .card-detail img { width: 100%; height: 240px; object-fit: cover; display: block; background: var(--surface2); }
   .card-detail-body { padding: 16px; }
   .card-detail-name { font-family: 'Cinzel', serif; font-size: 17px; margin-bottom: 4px; }
   .card-detail-date { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .card-detail-who { font-size: 12px; color: var(--epic); margin-bottom: 8px; }
   .card-detail-note { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
-  .card-detail-close {
-    width: 100%; padding: 12px;
-    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text);
-    font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif;
-  }
+  .card-detail-close { width: 100%; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+
+  /* ── Sync indicator ── */
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--uncommon); display: inline-block; margin-right: 5px; animation: blink 2s ease-in-out infinite; }
+  .sync-dot.off { background: #ff6b6b; animation: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
 </style>
 </head>
 <body>
-
 <div id="stars"></div>
 
-<!-- ══════════════ HOME ══════════════ -->
-<div id="screen-home" class="screen active">
+<!-- ══ Firebase config warning ══ -->
+<div id="config-warning">
+  <div class="warning-box">
+    <code>const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBe4DQ4XUZnFrxyRzcauJnTkSsEbEsitmI",
+  authDomain: "lovares-454f4.firebaseapp.com",
+  projectId: "lovares-454f4",
+  storageBucket: "lovares-454f4.firebasestorage.app",
+  messagingSenderId: "983979740833",
+  appId: "1:983979740833:web:4dfe86946deb1514e3aae0"
+    };</code>
+  </div>
+</div>
+
+<!-- ══ Setup: quem é você ══ -->
+<div id="screen-setup">
+  <div class="setup-box">
+    <div style="font-size:48px; margin-bottom:16px">💖</div>
+    <div class="setup-title">Lovares Album Collection</div>
+    <p class="setup-sub">Quem sou eu?</p>
+    <div class="who-grid">
+      <div class="who-card" id="wc-eu" onclick="selectWhoSetup('eu')">
+        <span class="wc-icon">🧡</span>
+        <div class="wc-name" id="name-eu-label">Lorynho</div>
+      </div>
+      <div class="who-card" id="wc-amor" onclick="selectWhoSetup('amor')">
+        <span class="wc-icon">💜</span>
+        <div class="wc-name" id="name-amor-label">Tavs</div>
+      </div>
+    </div>
+    <button class="btn-primary" id="setup-btn" onclick="confirmSetup()" disabled>Entrar no álbum</button>
+  </div>
+</div>
+
+<!-- ══ Loading ══ -->
+<div id="loading">
+  <div class="spinner"></div>
+  <p id="loading-msg">Carregando...</p>
+</div>
+
+<!-- ══════ HOME ══════ -->
+<div id="screen-home" class="screen">
   <div class="home-hero">
     <span class="heart">💖</span>
-    <div class="home-title">Somos muito bonitos & colecionáveis</div>
+    <div class="home-title">Lovares Album Collection</div>
+    <p class="home-sub">Samos lindos<br>E colecionáveis</p>
+    <span class="user-pill" onclick="switchUser()">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="current-user-label">...</span> · trocar
+    </span>
   </div>
-
   <div class="stats-row">
     <div class="stat-box">
       <div class="stat-num" id="stat-total">0</div>
-      <div class="stat-label">figurinhas</div>
+      <div class="stat-label">memórias</div>
     </div>
     <div class="stat-box">
-      <div class="stat-num" id="stat-packs" style="color: var(--legendary)">0</div>
+      <div class="stat-num" id="stat-packs" style="color:var(--legendary)">0</div>
       <div class="stat-label">pacotes</div>
     </div>
     <div class="stat-box">
-      <div class="stat-num" id="stat-legendary" style="color: var(--legendary)">0</div>
+      <div class="stat-num" id="stat-legendary" style="color:var(--legendary)">0</div>
       <div class="stat-label">lendárias</div>
     </div>
   </div>
-
   <div class="action-grid">
     <div class="action-card" onclick="goTo('add')">
       <span class="ac-icon">📸</span>
       <div class="ac-title">Adicionar memória</div>
-      <div class="ac-desc">Criar nova figurinha</div>
+      <div class="ac-desc">Nova figurinha</div>
     </div>
     <div class="action-card" onclick="goTo('packs')">
       <span class="ac-icon">✨</span>
@@ -466,11 +394,10 @@
   </div>
 </div>
 
-<!-- ══════════════ ADICIONAR ══════════════ -->
+<!-- ══════ ADICIONAR ══════ -->
 <div id="screen-add" class="screen">
   <div class="page-title">Nova memória</div>
-  <p class="page-sub">Adicione uma foto e ela vira uma figurinha no álbum</p>
-
+  <p class="page-sub">Adicione uma foto — ela vira uma figurinha </p>
   <div class="form-group">
     <label>Foto da memória</label>
     <div class="upload-area" id="upload-area">
@@ -480,81 +407,61 @@
       <img id="photo-preview" class="upload-preview" alt="preview">
     </div>
   </div>
-
   <div class="form-group">
     <label>Nome da memória</label>
-    <input type="text" id="memory-name" placeholder="Ex: Jantar no La Maison, Viagem a Gramado...">
+    <input type="text" id="memory-name" placeholder="Ex: Gastamos dinero no mate; Fomos em restaurante chiq...">
   </div>
-
   <div class="form-group">
     <label>Data</label>
-    <input type="text" id="memory-date" placeholder="Ex: Dezembro 2024">
+    <input type="text" id="memory-date" placeholder="Ex: Dezembro/2024">
   </div>
-
   <div class="form-group">
     <label>Raridade</label>
     <select id="memory-rarity">
       <option value="comum">⚪ Comum — um momento do dia a dia</option>
       <option value="incomum">🟢 Incomum — algo especial</option>
-      <option value="rara">🔵 Rara — uma surpresa gostosah</option>
-      <option value="epica" selected>🟣 Épica — uma aventura</option>
-      <option value="lendaria">🟡 Lendária — rolê pro max</option>
+      <option value="rara">🔵 Rara — uma surpresa gostosa</option>
+      <option value="epica" selected>🟣 Épica — uma aventura boa</option>
+      <option value="lendaria">🟡 Lendária — evento pro max</option>
     </select>
   </div>
-
   <div class="form-group">
     <label>Nota especial (opcional)</label>
     <textarea id="memory-note" placeholder="O que foi especial nesse momento?"></textarea>
   </div>
-
-  <div class="form-group">
-    <label>Quem adicionou?</label>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <div id="who-eu" class="action-card" onclick="selectWho('eu')" style="padding: 14px; text-align: center;">
-        <div class="ac-icon">🧡</div>
-        <div class="ac-title">Eu</div>
-      </div>
-      <div id="who-amor" class="action-card" onclick="selectWho('amor')" style="padding: 14px; text-align: center;">
-        <div class="ac-icon">💜</div>
-        <div class="ac-title">Minha paixão</div>
-      </div>
-    </div>
-  </div>
-
-  <button class="btn-primary" onclick="saveMemory()">✨ Salvar figurinha</button>
-  <div style="height: 12px;"></div>
+  <button class="btn-primary" id="save-btn" onclick="saveMemory()">✨ Salvar figurinha</button>
+  <div style="height:12px"></div>
   <button class="btn-secondary" onclick="goTo('home')">Cancelar</button>
 </div>
 
-<!-- ══════════════ PACOTES ══════════════ -->
+<!-- ══════ PACOTES ══════ -->
 <div id="screen-packs" class="screen">
   <div class="page-title">Pacotes</div>
-  <p class="page-sub">Cada 3 memórias novas geram um pacote com 5 figurinhas</p>
-
+  <p class="page-sub">A cada 3 memórias novas, um pacote fica disponível</p>
   <div class="pack-hero">
     <span class="pack-icon">🎁</span>
     <div class="pack-count" id="packs-available">0</div>
     <div class="pack-label">pacotes disponíveis</div>
-    <button class="pack-btn" id="open-pack-btn" onclick="openPack()" disabled>
-      Abrir pacote ✨
-    </button>
+    <button class="pack-btn" id="open-pack-btn" onclick="openPack()" disabled>Abrir pacote ✨</button>
   </div>
-
   <div class="pack-info">
     <p>
       <strong>Como funciona?</strong><br>
-      A cada <strong>3 memórias</strong>, teremos um pacote novo fica disponível.<br><br>
-      Cada pacote contém <strong>5 figurinhas aleatórias</strong> da coleção.<br>
-      Figurinhas mais raras têm menos chance de aparecer
+      A cada <strong>3 memórias</strong> adicionadas, um pacote novo fica disponível.<br><br>
+      Cada pacote tem <strong>5 figurinhas aleatórias (podem ser repetidas)</strong> — Lendárias têm apenas ~4% de chance ✨<br><br>
     </p>
   </div>
 </div>
 
-<!-- ══════════════ ÁLBUM ══════════════ -->
+<!-- ══════ ÁLBUM ══════ -->
 <div id="screen-album" class="screen">
   <div class="page-title">Álbum</div>
-  <p class="page-sub">Todas as figurinhas que já encontraramos</p>
-
+  <p class="page-sub">Todas as figurinhas</p>
+  <div class="tab-row">
+    <button class="tab-btn active" id="tab-meu" onclick="switchTab('meu', this)">🧡 Meu álbum</button>
+    <button class="tab-btn" id="tab-dele" onclick="switchTab('dele', this)">💜 Álbum d<span id="tab-dele-suffix">ele</span></button>
+    <button class="tab-btn" id="tab-todos" onclick="switchTab('todos', this)">✨ Juntos</button>
+  </div>
   <div class="filter-row">
     <div class="filter-chip active" onclick="filterAlbum('todas', this)">Todas</div>
     <div class="filter-chip" onclick="filterAlbum('comum', this)">⚪ Comum</div>
@@ -563,7 +470,6 @@
     <div class="filter-chip" onclick="filterAlbum('epica', this)">🟣 Épica</div>
     <div class="filter-chip" onclick="filterAlbum('lendaria', this)">🟡 Lendária</div>
   </div>
-
   <div class="card-grid" id="album-grid"></div>
   <div id="album-empty" class="empty-state" style="display:none">
     <span class="empty-icon">📭</span>
@@ -591,7 +497,7 @@
   </button>
 </nav>
 
-<!-- ── Pack opening overlay ── -->
+<!-- ── Pack overlay ── -->
 <div id="pack-overlay">
   <div class="overlay-title" id="overlay-title">Abrindo pacote...</div>
   <div class="reveal-card" id="reveal-card" onclick="flipCard()">
@@ -616,45 +522,195 @@
   <div class="card-detail">
     <img id="cd-img" src="" alt="">
     <div class="card-detail-body">
-      <div id="cd-rarity" class="rarity-badge" style="position:static; display:inline-block; margin-bottom:8px"></div>
+      <div id="cd-rarity" class="rarity-badge" style="position:static;display:inline-block;margin-bottom:8px"></div>
       <div class="card-detail-name" id="cd-name"></div>
       <div class="card-detail-date" id="cd-date"></div>
+      <div class="card-detail-who" id="cd-who"></div>
       <div class="card-detail-note" id="cd-note"></div>
       <button class="card-detail-close" onclick="closeCardOverlay()">Fechar</button>
     </div>
   </div>
 </div>
 
-<!-- ── Toast ── -->
 <div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════
+     FIREBASE CONFIG — substitua com suas credenciais
+     Veja o PASSO-A-PASSO.md para instruções
+════════════════════════════════════════════════ -->
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBe4DQ4XUZnFrxyRzcauJnTkSsEbEsitmI",
+  authDomain: "lovares-454f4.firebaseapp.com",
+  projectId: "lovares-454f4",
+  storageBucket: "lovares-454f4.firebasestorage.app",
+  messagingSenderId: "983979740833",
+  appId: "1:983979740833:web:4dfe86946deb1514e3aae0"
+};
+
+// Nomes dos usuários — personalize aqui!
+const USER_NAMES = {
+  eu:   "Lorynho",        
+  amor: "Tavs"   
+};
+</script>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <script>
 // ═══════════════════════════════════════
-// STATE
+// INIT
 // ═══════════════════════════════════════
-let state = {
-  memories: [],        // todas as fotos adicionadas
-  collected: [],       // figurinhas já obtidas em pacotes
-  packsAvailable: 0,
-  memoriesUntilPack: 3,
-  photoData: null,
-  selectedWho: 'eu'
-};
+const IS_CONFIGURED = FIREBASE_CONFIG.apiKey !== "COLE_AQUI";
 
-const RARITY_ORDER = ['comum','incomum','rara','epica','lendaria'];
-const RARITY_LABEL = { comum:'Comum', incomum:'Incomum', rara:'Rara', epica:'Épica', lendaria:'Lendária' };
+let db, storage, app;
+let currentUser = null; // 'eu' | 'amor'
+let allMemories = [];   // cache local
+let allCollected = [];  // cache local
+let packsAvailable = 0;
+let currentAlbumTab = 'meu';
+let currentFilter = 'todas';
+let unsubMemories = null;
+let unsubCollected = null;
+
+const RARITY_ORDER   = ['comum','incomum','rara','epica','lendaria'];
+const RARITY_LABEL   = { comum:'Comum', incomum:'Incomum', rara:'Rara', epica:'Épica', lendaria:'Lendária' };
 const RARITY_WEIGHTS = { comum:40, incomum:28, rara:18, epica:10, lendaria:4 };
+const RARITY_COLOR   = { comum:'#9ca3af', incomum:'#4ade80', rara:'#60a5fa', epica:'#c084fc', lendaria:'#fbbf24' };
 
-// Load from localStorage
-function loadState() {
-  const saved = localStorage.getItem('album-amor-v2');
-  if (saved) {
-    try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+function init() {
+  if (!IS_CONFIGURED) {
+    document.getElementById('config-warning').classList.add('show');
+    return;
   }
+  try {
+    app = firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    storage = firebase.storage();
+  } catch(e) {
+    showToast('Erro ao conectar ao Firebase 😢');
+    return;
+  }
+
+  // Update user name labels
+  document.getElementById('name-eu-label').textContent = USER_NAMES.eu;
+  document.getElementById('name-amor-label').textContent = USER_NAMES.amor;
+
+  // Check saved user
+  const saved = localStorage.getItem('album-user');
+  if (saved === 'eu' || saved === 'amor') {
+    currentUser = saved;
+    hideSetup();
+    startListeners();
+  }
+  // else: setup screen stays visible
 }
 
-function saveState() {
-  localStorage.setItem('album-amor-v2', JSON.stringify(state));
+function hideSetup() {
+  document.getElementById('screen-setup').style.display = 'none';
+  updateUserLabel();
+  goTo('home');
+}
+
+// ═══════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════
+let setupChoice = null;
+function selectWhoSetup(who) {
+  setupChoice = who;
+  ['eu','amor'].forEach(w => {
+    document.getElementById('wc-'+w).classList.toggle('selected', w === who);
+  });
+  document.getElementById('setup-btn').disabled = false;
+}
+
+function confirmSetup() {
+  if (!setupChoice) return;
+  currentUser = setupChoice;
+  localStorage.setItem('album-user', currentUser);
+  hideSetup();
+  startListeners();
+}
+
+function switchUser() {
+  currentUser = currentUser === 'eu' ? 'amor' : 'eu';
+  localStorage.setItem('album-user', currentUser);
+  updateUserLabel();
+  if (unsubMemories) unsubMemories();
+  if (unsubCollected) unsubCollected();
+  startListeners();
+  showToast('Mudou para ' + USER_NAMES[currentUser] + ' 👋');
+}
+
+function updateUserLabel() {
+  document.getElementById('current-user-label').textContent = USER_NAMES[currentUser] || currentUser;
+  // Update album "dele/dela" tab suffix
+  const other = currentUser === 'eu' ? 'amor' : 'eu';
+  document.getElementById('tab-dele-suffix').textContent = 'e';
+  document.getElementById('tab-dele').innerHTML = '💜 ' + USER_NAMES[other];
+}
+
+// ═══════════════════════════════════════
+// FIRESTORE LISTENERS (real-time)
+// ═══════════════════════════════════════
+function startListeners() {
+  showLoading('Sincronizando...');
+
+  // Listen to all memories (shared pool)
+  unsubMemories = db.collection('memories')
+    .orderBy('addedAt', 'desc')
+    .onSnapshot(snap => {
+      allMemories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      recalcPacks();
+      updateHome();
+      if (document.getElementById('screen-packs').classList.contains('active')) updatePacks();
+      hideLoading();
+      setSyncDot(true);
+    }, err => {
+      hideLoading();
+      setSyncDot(false);
+      showToast('Erro ao carregar memórias 😢');
+    });
+
+  // Listen to collected cards for current user
+  unsubCollected = db.collection('collected')
+    .where('owner', '==', currentUser)
+    .orderBy('collectedAt', 'desc')
+    .onSnapshot(snap => {
+      allCollected = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateHome();
+      if (document.getElementById('screen-album').classList.contains('active')) renderAlbum();
+    }, () => {
+      showToast('Erro ao carregar álbum 😢');
+    });
+}
+
+function setSyncDot(online) {
+  const dot = document.getElementById('sync-dot');
+  dot.classList.toggle('off', !online);
+}
+
+// ═══════════════════════════════════════
+// PACK CALCULATION
+// ═══════════════════════════════════════
+function recalcPacks() {
+  // Count packs earned by total memories (shared)
+  const total = allMemories.length;
+  const packsEarned = Math.floor(total / 3);
+
+  // Count packs already spent (per user)
+  db.collection('pack_opens')
+    .where('owner', '==', currentUser)
+    .get()
+    .then(snap => {
+      const spent = snap.size;
+      packsAvailable = Math.max(0, packsEarned - spent);
+      updateHome();
+      updatePacks();
+    });
 }
 
 // ═══════════════════════════════════════
@@ -666,26 +722,30 @@ function goTo(id) {
   document.getElementById('screen-' + id).classList.add('active');
   const nb = document.getElementById('nav-' + id);
   if (nb) nb.classList.add('active');
-
-  if (id === 'home') updateHome();
+  if (id === 'home')  updateHome();
   if (id === 'packs') updatePacks();
-  if (id === 'album') renderAlbum('todas');
+  if (id === 'album') { currentAlbumTab = 'meu'; currentFilter = 'todas'; resetFilters(); renderAlbum(); }
+}
+
+function resetFilters() {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-meu').classList.add('active');
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.filter-chip').classList.add('active');
 }
 
 // ═══════════════════════════════════════
 // HOME
 // ═══════════════════════════════════════
 function updateHome() {
-  document.getElementById('stat-total').textContent = state.memories.length;
-  document.getElementById('stat-packs').textContent = state.packsAvailable;
-  const legendCount = state.collected.filter(c => c.rarity === 'lendaria').length;
+  document.getElementById('stat-total').textContent = allMemories.length;
+  document.getElementById('stat-packs').textContent = packsAvailable;
+  const legendCount = allCollected.filter(c => c.rarity === 'lendaria').length;
   document.getElementById('stat-legendary').textContent = legendCount;
-
   const pending = document.getElementById('home-pending-card');
-  const pendingText = document.getElementById('home-pending-text');
-  if (state.packsAvailable > 0) {
+  if (packsAvailable > 0) {
     pending.style.display = '';
-    pendingText.textContent = state.packsAvailable + ' para abrir';
+    document.getElementById('home-pending-text').textContent = packsAvailable + ' para abrir';
   } else {
     pending.style.display = 'none';
   }
@@ -694,124 +754,143 @@ function updateHome() {
 // ═══════════════════════════════════════
 // ADD MEMORY
 // ═══════════════════════════════════════
+let photoFile = null;
+
 function previewPhoto(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  photoFile = event.target.files[0];
+  if (!photoFile) return;
   const reader = new FileReader();
   reader.onload = e => {
-    state.photoData = e.target.result;
     const preview = document.getElementById('photo-preview');
-    preview.src = state.photoData;
+    preview.src = e.target.result;
     preview.style.display = 'block';
     document.querySelector('#upload-area .upload-icon').style.display = 'none';
     document.querySelector('#upload-area .upload-text').style.display = 'none';
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(photoFile);
 }
 
-function selectWho(who) {
-  state.selectedWho = who;
-  ['eu','amor'].forEach(w => {
-    const el = document.getElementById('who-' + w);
-    if (w === who) {
-      el.style.borderColor = 'rgba(192,132,252,0.5)';
-      el.style.background = 'rgba(192,132,252,0.08)';
-    } else {
-      el.style.borderColor = '';
-      el.style.background = '';
-    }
-  });
-}
-
-function saveMemory() {
-  const name = document.getElementById('memory-name').value.trim();
-  const date = document.getElementById('memory-date').value.trim();
+async function saveMemory() {
+  const name   = document.getElementById('memory-name').value.trim();
+  const date   = document.getElementById('memory-date').value.trim();
   const rarity = document.getElementById('memory-rarity').value;
-  const note = document.getElementById('memory-note').value.trim();
+  const note   = document.getElementById('memory-note').value.trim();
 
-  if (!name) { showToast('Dá um nome para essa memória 💫'); return; }
-  if (!state.photoData) { showToast('Escolha uma foto primeiro 📸'); return; }
+  if (!name)      { showToast('Dá um nome para essa memória 💫'); return; }
+  if (!photoFile) { showToast('Escolha uma foto primeiro 📸'); return; }
 
-  const memory = {
-    id: Date.now(),
-    name, date, rarity, note,
-    who: state.selectedWho,
-    photo: state.photoData,
-    addedAt: new Date().toISOString()
-  };
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  showLoading('Enviando foto...');
 
-  state.memories.push(memory);
+  try {
+    // 1. Upload photo to Storage
+    const ext = photoFile.name.split('.').pop();
+    const path = `photos/${Date.now()}_${currentUser}.${ext}`;
+    const ref = storage.ref(path);
+    await ref.put(photoFile);
+    const photoURL = await ref.getDownloadURL();
 
-  // Check if earned a pack
-  const totalAdded = state.memories.length;
-  const packsEarned = Math.floor(totalAdded / 3);
-  const previousPacks = Math.floor((totalAdded - 1) / 3);
-  if (packsEarned > previousPacks) {
-    state.packsAvailable++;
-    showToast('🎁 Pacote desbloqueado!');
-  } else {
-    const remaining = 3 - (totalAdded % 3);
-    showToast(`✨ Figurinha salva! Faltam ${remaining} memórias para um pacote`);
+    // 2. Save memory to Firestore
+    await db.collection('memories').add({
+      name, date, rarity, note,
+      who: currentUser,
+      whoName: USER_NAMES[currentUser],
+      photoURL,
+      storagePath: path,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Reset form
+    photoFile = null;
+    document.getElementById('memory-name').value = '';
+    document.getElementById('memory-date').value = '';
+    document.getElementById('memory-note').value = '';
+    document.getElementById('memory-rarity').value = 'epica';
+    document.getElementById('photo-preview').style.display = 'none';
+    document.querySelector('#upload-area .upload-icon').style.display = '';
+    document.querySelector('#upload-area .upload-text').style.display = '';
+    document.getElementById('photo-input').value = '';
+
+    hideLoading();
+    showToast('✨ Memória salva na nuvem!');
+    goTo('home');
+  } catch(e) {
+    hideLoading();
+    showToast('Erro ao salvar 😢 Verifique a conexão');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Salvar figurinha';
   }
-
-  // Reset form
-  state.photoData = null;
-  document.getElementById('memory-name').value = '';
-  document.getElementById('memory-date').value = '';
-  document.getElementById('memory-note').value = '';
-  document.getElementById('memory-rarity').value = 'epica';
-  document.getElementById('photo-preview').style.display = 'none';
-  document.querySelector('#upload-area .upload-icon').style.display = '';
-  document.querySelector('#upload-area .upload-text').style.display = '';
-  document.getElementById('photo-input').value = '';
-  selectWho('eu');
-
-  saveState();
-  goTo('home');
 }
 
 // ═══════════════════════════════════════
 // PACKS
 // ═══════════════════════════════════════
 function updatePacks() {
-  document.getElementById('packs-available').textContent = state.packsAvailable;
-  const btn = document.getElementById('open-pack-btn');
-  btn.disabled = state.packsAvailable === 0 || state.memories.length === 0;
+  document.getElementById('packs-available').textContent = packsAvailable;
+  document.getElementById('open-pack-btn').disabled = packsAvailable === 0 || allMemories.length === 0;
 }
 
-// Pack opening state
 let packCards = [];
 let currentCardIndex = 0;
 let isFlipped = false;
 
-function openPack() {
-  if (state.packsAvailable === 0 || state.memories.length === 0) return;
-  state.packsAvailable--;
+async function openPack() {
+  if (packsAvailable === 0 || allMemories.length === 0) return;
 
-  // Pick 5 random cards weighted by rarity
-  packCards = [];
-  const pool = [...state.memories];
+  showLoading('Preparando pacote...');
+  try {
+    // Record pack open
+    await db.collection('pack_opens').add({
+      owner: currentUser,
+      openedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    packsAvailable--;
 
-  // If pool < 5, allow repeats
-  for (let i = 0; i < 5; i++) {
-    const picked = pickWeightedCard(pool);
-    packCards.push(picked);
-    // Add to collected
-    state.collected.push({ ...picked, collectedAt: new Date().toISOString() });
+    // Pick 5 cards
+    packCards = [];
+    const toSave = [];
+    for (let i = 0; i < 5; i++) {
+      const picked = pickWeightedCard(allMemories);
+      packCards.push(picked);
+      toSave.push({
+        memoryId: picked.id,
+        name: picked.name,
+        date: picked.date || '',
+        rarity: picked.rarity,
+        note: picked.note || '',
+        whoName: picked.whoName || '',
+        photoURL: picked.photoURL,
+        owner: currentUser,
+        collectedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // Save collected cards
+    const batch = db.batch();
+    toSave.forEach(card => {
+      batch.set(db.collection('collected').doc(), card);
+    });
+    await batch.commit();
+
+    hideLoading();
+    currentCardIndex = 0;
+    isFlipped = false;
+    showPackCard(0);
+    document.getElementById('pack-overlay').classList.add('show');
+    document.getElementById('overlay-close').style.display = 'none';
+    updatePacks();
+  } catch(e) {
+    hideLoading();
+    showToast('Erro ao abrir pacote 😢');
+    console.error(e);
   }
-
-  saveState();
-
-  currentCardIndex = 0;
-  isFlipped = false;
-  showPackCard(0);
-  document.getElementById('pack-overlay').classList.add('show');
-  document.getElementById('overlay-close').style.display = 'none';
-  updatePacks();
 }
 
 function pickWeightedCard(pool) {
-  // Build weighted pool
   const weighted = [];
   pool.forEach(m => {
     const w = RARITY_WEIGHTS[m.rarity] || 10;
@@ -827,31 +906,23 @@ function showPackCard(index) {
   inner.style.transition = 'none';
   inner.style.transform = 'rotateY(0deg)';
   document.getElementById('reveal-card').classList.remove('flipped');
-
-  // Set back content
-  document.getElementById('reveal-img').src = card.photo;
+  document.getElementById('reveal-img').src = card.photoURL;
   document.getElementById('reveal-name').textContent = card.name;
   const rl = document.getElementById('reveal-rarity');
   rl.textContent = RARITY_LABEL[card.rarity];
-  rl.className = 'reveal-rarity';
-  const colorMap = { comum:'#9ca3af', incomum:'#4ade80', rara:'#60a5fa', epica:'#c084fc', lendaria:'#fbbf24' };
-  rl.style.color = colorMap[card.rarity] || '#fff';
-
-  document.getElementById('reveal-progress').textContent = (index + 1) + ' / 5';
+  rl.style.color = RARITY_COLOR[card.rarity] || '#fff';
+  document.getElementById('reveal-progress').textContent = (index+1) + ' / 5';
   document.getElementById('reveal-hint').style.display = '';
-  document.getElementById('overlay-title').textContent = 'Carta ' + (index + 1) + ' de 5';
-
+  document.getElementById('overlay-title').textContent = 'Carta ' + (index+1) + ' de 5';
   setTimeout(() => { inner.style.transition = ''; }, 50);
 }
 
 function flipCard() {
   if (isFlipped) {
-    // Advance to next
     if (currentCardIndex < packCards.length - 1) {
       currentCardIndex++;
       showPackCard(currentCardIndex);
     } else {
-      // Done
       document.getElementById('reveal-hint').style.display = 'none';
       document.getElementById('overlay-title').textContent = 'Pacote aberto! 🎉';
       document.getElementById('overlay-close').style.display = 'block';
@@ -861,16 +932,10 @@ function flipCard() {
   isFlipped = true;
   document.getElementById('reveal-card').classList.add('flipped');
   document.getElementById('reveal-hint').textContent = 'Toque novamente para a próxima';
-
-  // Legendary sparkle effect
   const card = packCards[currentCardIndex];
-  if (card.rarity === 'lendaria') {
-    document.getElementById('overlay-title').textContent = '🌟 LENDÁRIA! 🌟';
-  } else if (card.rarity === 'epica') {
-    document.getElementById('overlay-title').textContent = '✨ Épica!';
-  } else {
-    document.getElementById('overlay-title').textContent = RARITY_LABEL[card.rarity];
-  }
+  if (card.rarity === 'lendaria')     document.getElementById('overlay-title').textContent = '🌟 LENDÁRIA! 🌟';
+  else if (card.rarity === 'epica')   document.getElementById('overlay-title').textContent = '✨ Épica!';
+  else document.getElementById('overlay-title').textContent = RARITY_LABEL[card.rarity];
 }
 
 function closePackOverlay() {
@@ -881,41 +946,71 @@ function closePackOverlay() {
 // ═══════════════════════════════════════
 // ALBUM
 // ═══════════════════════════════════════
-let currentFilter = 'todas';
+function switchTab(tab, el) {
+  currentAlbumTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderAlbum();
+}
 
 function filterAlbum(rarity, el) {
   currentFilter = rarity;
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  renderAlbum(rarity);
+  renderAlbum();
 }
 
-function renderAlbum(filter) {
-  const grid = document.getElementById('album-grid');
+async function renderAlbum() {
+  const grid  = document.getElementById('album-grid');
   const empty = document.getElementById('album-empty');
   grid.innerHTML = '';
 
-  let cards = [...state.collected];
-  // Sort: lendaria first
-  cards.sort((a, b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity));
+  let cards;
 
-  if (filter !== 'todas') {
-    cards = cards.filter(c => c.rarity === filter);
+  if (currentAlbumTab === 'todos') {
+    // Show both users — need to query all collected
+    showLoading('Carregando álbum...');
+    try {
+      const snap = await db.collection('collected').orderBy('collectedAt','desc').get();
+      cards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(e) {
+      hideLoading();
+      showToast('Erro ao carregar 😢');
+      return;
+    }
+    hideLoading();
+  } else if (currentAlbumTab === 'meu') {
+    cards = [...allCollected]; // already filtered by currentUser
+  } else {
+    // other user
+    const other = currentUser === 'eu' ? 'amor' : 'eu';
+    showLoading('Carregando álbum...');
+    try {
+      const snap = await db.collection('collected').where('owner','==',other).orderBy('collectedAt','desc').get();
+      cards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(e) {
+      hideLoading();
+      showToast('Erro ao carregar 😢');
+      return;
+    }
+    hideLoading();
   }
 
-  if (cards.length === 0) {
-    empty.style.display = '';
-    return;
-  }
+  cards.sort((a,b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity));
+  if (currentFilter !== 'todas') cards = cards.filter(c => c.rarity === currentFilter);
+
+  if (cards.length === 0) { empty.style.display = ''; return; }
   empty.style.display = 'none';
 
   cards.forEach(card => {
     const div = document.createElement('div');
     div.className = `sticker-card card-border-${card.rarity}`;
     div.onclick = () => openCardDetail(card);
+    const whoEmoji = card.owner === 'eu' ? '🧡' : '💜';
     div.innerHTML = `
-      <img src="${card.photo}" alt="${card.name}" loading="lazy">
+      <img src="${card.photoURL}" alt="${card.name}" loading="lazy">
       <span class="rarity-badge r-${card.rarity}">${RARITY_LABEL[card.rarity]}</span>
+      <span class="who-tag">${whoEmoji}</span>
       <div class="card-body">
         <div class="card-name">${card.name}</div>
         <div class="card-date">${card.date || ''}</div>
@@ -926,27 +1021,28 @@ function renderAlbum(filter) {
 }
 
 function openCardDetail(card) {
-  const colorMap = { comum:'#9ca3af', incomum:'#4ade80', rara:'#60a5fa', epica:'#c084fc', lendaria:'#fbbf24' };
-  document.getElementById('cd-img').src = card.photo;
+  document.getElementById('cd-img').src = card.photoURL;
   document.getElementById('cd-name').textContent = card.name;
   document.getElementById('cd-date').textContent = card.date || '';
+  document.getElementById('cd-who').textContent = 'Adicionado por ' + (card.whoName || card.owner);
   document.getElementById('cd-note').textContent = card.note || '';
   const badge = document.getElementById('cd-rarity');
   badge.textContent = RARITY_LABEL[card.rarity];
   badge.className = `rarity-badge r-${card.rarity}`;
-  badge.style.position = 'static';
-  badge.style.display = 'inline-block';
-  badge.style.marginBottom = '8px';
+  badge.style.position = 'static'; badge.style.display = 'inline-block'; badge.style.marginBottom = '8px';
   document.getElementById('card-overlay').classList.add('show');
 }
+function closeCardOverlay() { document.getElementById('card-overlay').classList.remove('show'); }
 
-function closeCardOverlay() {
-  document.getElementById('card-overlay').classList.remove('show');
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Carregando...';
+  document.getElementById('loading').classList.add('show');
 }
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
 
-// ═══════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -957,16 +1053,13 @@ function showToast(msg) {
 }
 
 // ═══════════════════════════════════════
-// INIT
+// SERVICE WORKER
 // ═══════════════════════════════════════
-loadState();
-selectWho('eu');
-updateHome();
-
-// Service Worker registration
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+init();
 </script>
 </body>
 </html>
